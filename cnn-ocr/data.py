@@ -1,16 +1,15 @@
 # Based off work done by hualsuklee - https://github.com/hwalsuklee/tensorflow-mnist-cnn
 
-'''
-~ parameters ~
 
-IMAGE_SIZE - how long/wide the image is, in pixels
-NUM_LABELS - number of classes (36 for letters + numbers, 35 since 0/O are the same here)
-VALIDATION_SIZE - subset of the train set (Thomas the Train memes, anyone?) - how many images it uses to check itself as it trains
+# ~ parameters ~
 
-train_data, train_labels - how many images in the entire training dataset gzip file
-test_data, test_labels - how many images in the entire test dataset gzip file
+# IMAGE_SIZE - how long/wide the image is, in pixels
+# NUM_LABELS - number of classes (36 for letters + numbers, 35 since 0/O are the same here)
+# VALIDATION_SIZE - subset of the train set (Thomas the Train memes, anyone?) - how many images it uses to check itself as it trains
 
-'''
+# train_data, train_labels - how many images in the entire training dataset gzip file
+# test_data, test_labels - how many images in the entire test dataset gzip file
+
 
 # import as data
 
@@ -28,14 +27,15 @@ from six.moves import urllib
 
 import tensorflow as tf
 
+import params as pm
+
 DATA_DIRECTORY = "data"
 
-# Params for MNIST
-IMAGE_SIZE = 28
+IMAGE_SIZE = pm.imageSize
 NUM_CHANNELS = 1
 PIXEL_DEPTH = 255
-NUM_LABELS = 35
-VALIDATION_SIZE = 10000  # Size of the validation set, a subset of the train set.
+NUM_LABELS = pm.nClasses
+VALIDATION_SIZE = pm.validationSize  # Size of the validation set, a subset of the train set.
 
 # Download MNIST data
 def maybe_download(filename):
@@ -89,7 +89,7 @@ def expend_training_data(images, labels):
     j = 0 # counter
     for x, y in zip(images, labels):
         j = j+1
-        if j%1000==0:
+        if j%pm.expandPrintRate==0:
             print ('expanding data : %03d / %03d' % (j,numpy.size(images,0)))
 
         # register original data
@@ -99,7 +99,7 @@ def expend_training_data(images, labels):
         # get a value for the background
         # zero is the expected value, but median() is used to estimate background's value 
         bg_value = numpy.median(x) # this is regarded as background's value        
-        image = numpy.reshape(x, (-1, 28))
+        image = numpy.reshape(x, (-1, pm.imageSize))
 
         for i in range(4):
             # rotate the image with random degree
@@ -111,7 +111,7 @@ def expend_training_data(images, labels):
             new_img_ = ndimage.shift(new_img,shift, cval=bg_value)
 
             # register new training data
-            expanded_images.append(numpy.reshape(new_img_, 784))
+            expanded_images.append(numpy.reshape(new_img_, pm.imageArea))
             expanded_labels.append(y)
 
     # images and labels are concatenated for random-shuffle at each epoch
@@ -130,10 +130,10 @@ def prepare_MNIST_data(use_data_augmentation=True):
     test_labels_filename = maybe_download('test-labels-idx1-ubyte.gz')
 
     # Extract it into numpy arrays.
-    train_data = extract_data(train_data_filename, 140000)
-    train_labels = extract_labels(train_labels_filename, 140000)
-    test_data = extract_data(test_data_filename, 35000)
-    test_labels = extract_labels(test_labels_filename, 35000)
+    train_data = extract_data(train_data_filename, pm.nTrainData)
+    train_labels = extract_labels(train_labels_filename, pm.nTrainData)
+    test_data = extract_data(test_data_filename, pm.nTestData)
+    test_labels = extract_labels(test_labels_filename, pm.nTestData)
 
     # Generate a validation set.
     validation_data = train_data[:VALIDATION_SIZE, :]

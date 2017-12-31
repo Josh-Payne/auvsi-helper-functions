@@ -11,15 +11,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class CharGen {
 
 	public static void main(String[] args) throws IOException {
 		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 		char[] charArray = chars.toCharArray();
-		int ratio = 4;
-		int howManyInstances = 4000;
+		int ratio = 2;
+		int sz = 15;
+		int howManyInstances = 3;
 		// Replace with your own
 		String newDirPath = "/Users/joshpayne1/desktop/chars/";
 		File trainDir = new File(newDirPath+"train");
@@ -32,24 +32,26 @@ public class CharGen {
 		}
 		for (char ch : charArray) {
 			String text = Character.toString(ch);
+			int bold = 0;
 			for (int m = 0; m <= howManyInstances; m+=0) {
 				BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 				Graphics2D g2d = img.createGraphics();
 				Font font;
-				int bold = ThreadLocalRandom.current().nextInt(0,2);
-				int size = ThreadLocalRandom.current().nextInt(8,17);
-				if (bold == 0) {
-					font = new Font("Arial", Font.BOLD, size);
-				} else font = new Font("Arial", Font.PLAIN, size);
+
+				if (bold >= 2) {
+					font = new Font("Arial", Font.BOLD, sz);
+				} else font = new Font("Arial", Font.PLAIN, sz);
+				bold++;
 				g2d.setFont(font);
 				FontMetrics fm = g2d.getFontMetrics();
 				int width = fm.stringWidth(text);
 				int height = fm.getHeight();
 
-				g2d.dispose();
 
-				img = new BufferedImage(width+32, height+32, BufferedImage.TYPE_INT_ARGB);
+				img = new BufferedImage(width+200, height+200, BufferedImage.TYPE_INT_ARGB);
+				
 				g2d = img.createGraphics();
+				
 				g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
 				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
@@ -61,36 +63,21 @@ public class CharGen {
 				g2d.setFont(font);
 				fm = g2d.getFontMetrics();
 				g2d.setColor(Color.BLACK);
+				g2d.setBackground(Color.WHITE);
 				g2d.drawString(text, 0, fm.getAscent());
 				g2d.dispose();
 
-				// Rotation information
-				int randomNumR = 0;
-				if (text.equals("W")||text.equals("M")||text.equals("6")||text.equals("9")) {
-					randomNumR = ThreadLocalRandom.current().nextInt(-90, 91);
-				} else {
-					randomNumR = ThreadLocalRandom.current().nextInt(0, 360);
-				}
-				double rotationRequired = Math.toRadians(randomNumR);
-				double locationX = img.getWidth() / 2;
-				double locationY = img.getHeight() / 2;
-				//        
 				AffineTransform tl = new AffineTransform();
-				int randomNumW = ThreadLocalRandom.current().nextInt(8, 17);
-				int randomNumH = ThreadLocalRandom.current().nextInt(8, 17);
-				tl.setToTranslation(randomNumW, randomNumH);
-				AffineTransformOp optl = new AffineTransformOp(tl, AffineTransformOp.TYPE_BILINEAR);
-
+				int x = (28 - width)/2;
+				int y = (28-height) / 2;
+				tl.setToTranslation(x, y);
+				
+				AffineTransformOp optl = new AffineTransformOp(tl, AffineTransformOp.TYPE_BILINEAR); //centers character
+				
 				img = optl.filter(img, null);
-				//        
-
-				AffineTransform rt = AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
-				AffineTransformOp oprt = new AffineTransformOp(rt, AffineTransformOp.TYPE_BILINEAR);
-
-				img = oprt.filter(img, null);
-
-				if (img.getWidth() >= 48 && img.getHeight() >= 48) {
-					BufferedImage dest = img.getSubimage(0, 0, 48, 48);
+				System.out.println("width: " + img.getWidth() + ", height: " + img.getHeight());
+				if (img.getWidth() >= 4 && img.getHeight() >= 4) {
+					BufferedImage dest = img.getSubimage(0, 0, 28, 28);
 					m++;
 					if (m % ratio == 1) {
 						File charDir = new File(newDirPath+"validate/"+ch);
